@@ -26,10 +26,12 @@
       <p>{{ output }}</p>
       <div v-if="resultSrc">
         <h3>检测后结果:</h3>
-        <video v-if="isVideo" controls>
-          <source :src="resultSrc" type="video/mp4">
+
+        <video v-if="isVideo" controls :key="resultSrc">
+          <source :src="resultSrc + '?t=' + timestamp" type="video/mp4">
         </video>
-        <img v-else :src="resultSrc" alt="检测后图片" />
+
+        <img v-else :src="resultSrc + '?t=' + timestamp" alt="检测后图片" />
       </div>
     </div>
   </div>
@@ -46,7 +48,8 @@ export default {
       selectedFile: '',
       fileSrc: null,
       resultSrc: null,
-      isVideo: false
+      isVideo: false,
+      timestamp: Date.now()  // 避免缓存问题
     };
   },
   methods: {
@@ -67,37 +70,26 @@ export default {
         });
 
         if (uploadResponse.data.file_path) {
-          // 文件上传成功，开始检测
           this.output = "文件上传成功，开始检测...";
 
           // 调用检测接口
           const detectResponse = await axios.get("http://localhost:8000/detect", {
             params: {
               type: type,
-              filename: uploadResponse.data.file_path  // 使用上传文件的路径进行检测
+              filename: uploadResponse.data.file_path
             }
           });
 
-          // // 处理检测结果
-          // if (detectResponse.data.result_path) {
-          //   // this.resultSrc = `http://localhost:8000/results/${detectResponse.data.result_path.split('/').pop()}`;
-          //   // 修改前端拼接路径
-          //   this.resultSrc = `http://localhost:8000/results/${detectResponse.data.result_path.split('/').pop()}`;
-          //   this.output = "检测完成，显示结果";
-          // } else {
-          //   this.output = "未找到检测结果";
-          // }
           if (detectResponse.data.result_path) {
-            this.resultSrc = `http://localhost:8000/results/${detectResponse.data.result_path.split('/').pop()}`;
+            this.resultSrc = `http://localhost:8000/results/${detectResponse.data.result_path}`;
+            this.timestamp = Date.now();  // 更新时间戳，避免缓存问题
             this.output = "检测完成，显示结果";
           } else {
             this.output = "未找到检测结果";
           }
-
         } else {
           this.output = "文件上传失败，请重试";
         }
-
       } catch (error) {
         console.error("Error:", error);
         this.output = "发生错误：" + (error.response?.data?.detail || error.message);

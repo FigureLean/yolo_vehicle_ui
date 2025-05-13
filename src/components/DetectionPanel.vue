@@ -3,6 +3,7 @@
     <div class="button-section">
       <button @click="handleImageDetection">图像检测</button>
       <button @click="handleVideoDetection">视频检测</button>
+      <button @click="clearState">清除</button>
     </div>
 
     <div class="input-section">
@@ -112,6 +113,15 @@ export default {
         this.fileSrc = URL.createObjectURL(file);
         this.isVideo = file.type.startsWith('video/');
       }
+    },
+    clearState() {
+      // 清除当前状态，以便上传新的文件
+      this.selectedFile = '';
+      this.fileSrc = null;
+      this.resultSrc = null;
+      this.output = '';
+      this.timestamp = Date.now();  // 更新时间戳，避免缓存问题
+      this.$refs.fileInput.value = null;  // 清除文件输入框的值
     }
   }
 };
